@@ -6,8 +6,9 @@
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
     <style>
-        body { font-family: sans-serif; background: #1e1e1e; color: white; text-align: center; padding: 40px; }
-        #word-display { font-size: 2.5rem; letter-spacing: 10px; margin: 20px 0; font-family: monospace; }
+        body { font-family: sans-serif; background: #1e1e1e; color: white; text-align: center; padding: 20px; }
+        #gallows { font-family: monospace; font-size: 1.2rem; color: #00e676; margin: 10px auto; white-space: pre; line-height: 1.2; }
+        #word-display { font-size: 2.5rem; letter-spacing: 10px; margin: 15px 0; font-family: monospace; }
         #keyboard { display: flex; flex-wrap: wrap; max-width: 600px; margin: 20px auto; justify-content: center; gap: 8px; }
         button { width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; border-radius: 5px; border: none; background: #333; color: white; }
         button:disabled { background: #555; opacity: 0.4; cursor: not-allowed; }
@@ -17,6 +18,7 @@
 <body>
 
     <h1>Hangman Game</h1>
+    <div id="gallows"></div>
     <div id="word-display">_ _ _ _</div>
     <div id="status">Lives Remaining: 6</div>
     <div id="keyboard"></div>
@@ -26,12 +28,70 @@ import random
 from pyscript import document
 from pyodide.ffi import create_proxy
 
+HANGMAN_PICS = [
+    '''
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+=========''', '''
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+=========''', '''
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+=========''', '''
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+=========''', '''
+  +---+
+  |   |
+  O   |
+ /|\\  |
+      |
+      |
+=========''', '''
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ /    |
+      |
+=========''', '''
+  +---+
+  |   |
+  O   |
+ /|\\  |
+ / \\  |
+      |
+========='''
+]
+
 word_bank = ["python", "snake", "matter", "profession", "assistant", "technical"]
 secret_word = random.choice(word_bank)
 GL = []
 lives = 6
 
 def update_display():
+    # Update Gallows Picture (indexed by wrong guesses made)
+    wrong_guesses = 6 - lives
+    document.querySelector("#gallows").innerText = HANGMAN_PICS[wrong_guesses]
+
+    # Update Word Display
     display = ""
     for char in secret_word:
         if char in GL:
@@ -40,6 +100,7 @@ def update_display():
             display += "_ "
     document.querySelector("#word-display").innerText = display
     
+    # Check Win / Loss Condition
     if "_" not in display:
         document.querySelector("#status").innerText = "YOU WON!!!! 🎉"
         disable_all_buttons()
